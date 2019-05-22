@@ -64,6 +64,13 @@ function processHtml(html, maxCols, maxRows) {
   return html;
 }
 
+function removeSlash(href) {
+    if (typeof href === 'string' && href.endsWith('/')) {
+        href = href.slice(0, -1);
+    }
+    return href;
+}
+
 class Driver {
   constructor(Browser, pageUrl, options) {
     this.options = Object.assign({}, {
@@ -176,13 +183,13 @@ class Driver {
   fetch(pageUrl, index, depth) {
     // Return when the URL is a duplicate or maxUrls has been reached
     if (
-      this.analyzedPageUrls[pageUrl.href]
+      this.analyzedPageUrls[removeSlash(pageUrl.href)]
       || this.analyzedPageUrls.length >= this.options.maxUrls
     ) {
       return Promise.resolve();
     }
 
-    this.analyzedPageUrls[pageUrl.href] = {
+    this.analyzedPageUrls[removeSlash(pageUrl.href)] = {
       status: 0,
     };
 
@@ -210,7 +217,7 @@ class Driver {
 
     this.timer(`visit end; url: ${pageUrl.href}`, timerScope);
 
-    this.analyzedPageUrls[pageUrl.href].status = browser.statusCode;
+    this.analyzedPageUrls[removeSlash(pageUrl.href)].status = browser.statusCode;
 
     // Validate response
     if (!browser.statusCode) {
@@ -224,7 +231,7 @@ class Driver {
     if (!browser.contentType || !/\btext\/html\b/.test(browser.contentType)) {
       this.wappalyzer.log(`Skipping; url: ${pageUrl.href}; content type: ${browser.contentType}`, 'driver');
 
-      delete this.analyzedPageUrls[pageUrl.href];
+      delete this.analyzedPageUrls[removeSlash(pageUrl.href)];
     }
 
     const { cookies, headers, scripts } = browser;
@@ -269,7 +276,7 @@ class Driver {
         const type = error.message && errorTypes[error.message] ? error.message : 'UNKNOWN_ERROR';
         const message = error.message && errorTypes[error.message] ? errorTypes[error.message] : 'Unknown error';
 
-        this.analyzedPageUrls[pageUrl.href].error = {
+        this.analyzedPageUrls[removeSlash(pageUrl.href)].error = {
           type,
           message,
         };
